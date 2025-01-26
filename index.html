@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meeting Room Booking</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Al Rajeh Meeting Room Booker</h1>
+    <div id="calendar"></div>
+    <div id="rooms-list"></div>
+    <div id="booking-form" class="hidden">
+      <h2>Book Room</h2>
+      <form>
+        <label for="room-name">Room:</label>
+        <input type="text" id="room-name" readonly>
+        
+        <label for="date">Date:</label>
+        <input type="date" id="date" required>
+        
+        <label for="start-time">Start Time:</label>
+        <input type="time" id="start-time" required>
+        
+        <label for="end-time">End Time:</label>
+        <input type="time" id="end-time" required>
+        
+        <label for="name">Your Name:</label>
+        <input type="text" id="name" required>
+        
+        <button type="submit">Book Room</button>
+        <button type="button" id="cancel-booking">Cancel</button>
+      </form>
+    </div>
+    <div id="bookings-list"></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
