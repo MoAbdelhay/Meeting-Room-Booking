@@ -94,12 +94,39 @@ function setupFormValidation() {
   });
 }
 
+function isBookingAvailable(newBooking) {
+  const bookings = getBookings();
+  const newStart = new Date(`${newBooking.date}T${newBooking.startTime}`);
+  const newEnd = new Date(`${newBooking.date}T${newBooking.endTime}`);
+  
+  return !bookings.some(booking => {
+    if (booking.date !== newBooking.date) return false;
+    
+    const existingStart = new Date(`${booking.date}T${booking.startTime}`);
+    const existingEnd = new Date(`${booking.date}T${booking.endTime}`);
+    
+    return (newStart < existingEnd && newEnd > existingStart);
+  });
+}
+
 function validateBooking() {
   const start = new Date(`2025-01-01T${startTimeInput.value}`);
   const end = new Date(`2025-01-01T${endTimeInput.value}`);
   
   if (start >= end) {
     alert('End time must be after start time');
+    return false;
+  }
+  
+  const proposedBooking = {
+    date: dateInput.value,
+    startTime: startTimeInput.value,
+    endTime: endTimeInput.value,
+    room: roomNameInput.value
+  };
+  
+  if (!isBookingAvailable(proposedBooking)) {
+    alert('This time slot is already booked. Please choose another time.');
     return false;
   }
   
