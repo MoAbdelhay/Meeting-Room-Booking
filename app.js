@@ -15,6 +15,20 @@ const nameInput = document.getElementById('name');
 
 let calendar;
 
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBG7UBPHgxM7JSJWHjZkwjsPtbdp5eYNVc",
+  authDomain: "rajeh-93f8b.firebaseapp.com",
+  databaseURL: "rajeh-93f8b",
+  projectId: "rajeh-93f8b",
+  storageBucket: "rajeh-93f8b.firebasestorage.app",
+  messagingSenderId: "1040787128859",
+  appId: "1:1040787128859:web:b86ea0310cf34aea22eebe"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
   loadRooms();
@@ -134,10 +148,15 @@ function validateBooking() {
 }
 
 function saveBooking(booking) {
-  const bookings = getBookings();
-  bookings.push(booking);
-  localStorage.setItem('bookings', JSON.stringify(bookings));
-  sendEmailNotification(booking); // Add this line
+  const newBookingRef = database.ref('bookings').push();
+  newBookingRef.set(booking, (error) => {
+    if (error) {
+      console.log('FAILED...', error);
+    } else {
+      console.log('SUCCESS!');
+      sendEmailNotification(booking); // Add this line
+    }
+  });
 }
 
 function sendEmailNotification(booking) {
@@ -158,8 +177,40 @@ function sendEmailNotification(booking) {
     });
 }
 
-function getCalendarEvents() {
-  return getBookings().map(booking => ({
+function getBookings(callback) {
+  database.ref('bookings').once('value', (snapshot) => {
+    const bookings = [];
+    snapshot.forEach((childSnapshot) => {
+      const booking = childSnapshot.val();
+      booking.id = childSnapshot.key;
+      bookings.push(booking);
+    });
+    callback(bookings);
+  });
+}
+
+function loadBookings() {
+  getBookings((bookings) => {
+    bookingsList.innerHTML = bookings.map(booking => `
+      <div class="booking-item">
+        <h3>${booking.room}</h3>
+        <p>Date: ${booking.date}</p>
+        <p>Time: ${booking.startTime} - ${booking.endTime}</p>
+        <p>Booked by: ${booking.name}</p>
+        <button onclick="deleteBooking('${booking.id}')">Cancel</button>
+      </div>
+    `).join('');
+    
+    // Refresh calendar events
+    if (calendar) {
+      calendar.removeAllEvents();
+      calendar.addEventSource(getCalendarEvents(bookings));
+    }
+  });
+}
+
+function getCalendarEvents(bookings) {
+  return bookings.map(booking => ({
     id: booking.id,
     title: `${booking.room} - ${booking.name}`,
     start: `${booking.date}T${booking.startTime}`,
@@ -168,31 +219,12 @@ function getCalendarEvents() {
   }));
 }
 
-function loadBookings() {
-  const bookings = getBookings();
-  bookingsList.innerHTML = bookings.map(booking => `
-    <div class="booking-item">
-      <h3>${booking.room}</h3>
-      <p>Date: ${booking.date}</p>
-      <p>Time: ${booking.startTime} - ${booking.endTime}</p>
-      <p>Booked by: ${booking.name}</p>
-      <button onclick="deleteBooking(${booking.id})">Cancel</button>
-    </div>
-  `).join('');
-  
-  // Refresh calendar events
-  if (calendar) {
-    calendar.removeAllEvents();
-    calendar.addEventSource(getCalendarEvents());
-  }
-}
-
-function getBookings() {
-  return JSON.parse(localStorage.getItem('bookings') || '[]');
-}
-
 function deleteBooking(id) {
-  const bookings = getBookings().filter(b => b.id !== id);
-  localStorage.setItem('bookings', JSON.stringify(bookings));
-  loadBookings();
+  database.ref('bookings/' + id).remove()
+    .then(() => {
+      loadBookings();
+    })
+    .catch((error) => {
+      console.log('FAILED...', error);
+    });
 }
