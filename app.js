@@ -137,6 +137,25 @@ function saveBooking(booking) {
   const bookings = getBookings();
   bookings.push(booking);
   localStorage.setItem('bookings', JSON.stringify(bookings));
+  sendEmailNotification(booking); // Add this line
+}
+
+function sendEmailNotification(booking) {
+  const templateParams = {
+    room: booking.room,
+    date: booking.date,
+    startTime: booking.startTime,
+    endTime: booking.endTime,
+    name: booking.name,
+    email: "gmom@alrajehmodern.com.sa.com" // Replace with the recipient's email address
+  };
+
+  emailjs.send('m73k12pv7qX_joeqM', 'k6Xjn0PIG8aBaUqtyZupU', templateParams)
+    .then(function(response) {
+       console.log('SUCCESS!', response.status, response.text);
+    }, function(error) {
+       console.log('FAILED...', error);
+    });
 }
 
 function getCalendarEvents() {
